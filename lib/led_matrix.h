@@ -28,6 +28,6 @@ void set_leds(float intensidade);
 
 // Função genérica para atualiza matriz
 void matrix_update_leds(Led_frame *frame, float intensidade);
-void matrix_alert(float intensidade);
+void fill_matrix(Led_color color, float intensidade);
 
 #endif

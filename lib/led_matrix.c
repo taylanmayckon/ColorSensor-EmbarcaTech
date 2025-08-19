@@ -13,14 +13,6 @@ Led_frame led_buffer= {{
     {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, 
 }};
 
-// Frame do alerta
-Led_frame alert_frame = {{
-    {0,0,0}, {0,0,0}, {255,0,0}, {0,0,0}, {0,0,0}, 
-    {0,0,0}, {0,0,0}, {255,0,0}, {0,0,0}, {0,0,0}, 
-    {0,0,0}, {0,0,0}, {255,0,0}, {0,0,0}, {0,0,0}, 
-    {0,0,0}, {0,0,0},   {0,0,0},   {0,0,0}, {0,0,0}, 
-    {0,0,0}, {0,0,0}, {255,0,0}, {0,0,0}, {0,0,0}, 
-}};
 
 static inline void put_pixel(uint32_t pixel_grb){
     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
@@ -64,6 +56,13 @@ void matrix_update_leds(Led_frame *frame, float intensidade){
     set_leds(intensidade);
 }
 
-void matrix_alert(float intensidade){
-    matrix_update_leds(&alert_frame, intensidade);
+// Preencher a matriz com uma cor
+void fill_matrix(Led_color color, float intensidade) {
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        led_buffer.led[i].red = color.red;
+        led_buffer.led[i].green = color.green;
+        led_buffer.led[i].blue = color.blue;
+    }
+
+    set_leds(intensidade);
 }

@@ -150,21 +150,30 @@ int main(){
         gy33_read_color(&gy33_data);
         printf("Cor detectada - R: %d, G: %d, B: %d, Clear: %d\n", gy33_data.r, gy33_data.g, gy33_data.b, gy33_data.c);
 
+        // Normmalizando os valores de cor e intensidade
+        Led_color color = {
+            .red = gy33_data.r / 256,
+            .green = gy33_data.g / 256,
+            .blue = gy33_data.b / 256
+        };
+        float led_intensity = (float)gy33_data.c / 65535.0; 
+
+        // Enviando a cor para a matriz de LEDs
+        fill_matrix(color, led_intensity);
+
+
         // Alertas
         // (DO JEITO QUE TÁ FUNCIONA PARA COR AZUL)
         if(lux_level < alerts.lux_threshold || gy33_data.b < alerts.color_threshold){
             pwm_set_gpio_level(BUZZER_A, wrap*0.02);
             pwm_set_gpio_level(BUZZER_B, wrap*0.02);
-            matrix_alert(0.05);
             sleep_ms(50);
             pwm_set_gpio_level(BUZZER_A, 0);
             pwm_set_gpio_level(BUZZER_B, 0);
-            matrix_alert(0.0);
         }
         else{
             pwm_set_gpio_level(BUZZER_A, 0);
             pwm_set_gpio_level(BUZZER_B, 0);
-            matrix_alert(0.0);
         }
 
         // Geraçao de cores para o sensor
@@ -201,6 +210,6 @@ int main(){
                 break;
         }
 
-        sleep_ms(1000);
+        sleep_ms(50);
     }
 }
