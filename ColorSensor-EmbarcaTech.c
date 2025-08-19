@@ -69,17 +69,6 @@ void set_pwm(uint gpio, uint wrap){
     pwm_set_gpio_level(gpio, 0);
 }
 
-// Função para imprimir uma exclamação nos alertas do display
-void make_alert_display(bool alert_flag, int x, int y){
-    if(alert_flag){
-        ssd1306_rect(&ssd, y, x, 26, 8, cor, !cor);
-        ssd1306_draw_string(&ssd, "!", x+8, y, !cor);
-    }
-    else{
-        ssd1306_draw_string(&ssd, "NORMAL", x, y, !cor);
-    }
-}
-
 
 // -> ISR dos Botões =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Tratamento de interrupções 
@@ -179,21 +168,6 @@ int main(){
         // Enviando a cor para a matriz de LEDs
         fill_matrix(color, led_intensity);
 
-
-        // Alertas
-        // (DO JEITO QUE TÁ FUNCIONA PARA COR AZUL)
-        if(lux_level < alerts.lux_threshold || color.blue > alerts.color_threshold){
-            pwm_set_gpio_level(BUZZER_A, wrap*0.02);
-            pwm_set_gpio_level(BUZZER_B, wrap*0.02);
-            sleep_ms(50);
-            pwm_set_gpio_level(BUZZER_A, 0);
-            pwm_set_gpio_level(BUZZER_B, 0);
-        }
-        else{
-            pwm_set_gpio_level(BUZZER_A, 0);
-            pwm_set_gpio_level(BUZZER_B, 0);
-        }
-
         // Geraçao de cores para o sensor
         switch(led_state){
             case 0:
@@ -227,6 +201,54 @@ int main(){
                 gpio_put(LED_BLUE, 1);
                 break;
         }
+
+        char str_lux[20];
+        char str_blue[20];
+        char str_green[20];
+        char str_red[20];
+        snprintf(str_lux, sizeof(str_lux), "Lux: %d", lux_level);
+        snprintf(str_blue, sizeof(str_blue), "B: %d", color.blue);
+        snprintf(str_green, sizeof(str_green), "G: %d", color.green);
+        snprintf(str_red, sizeof(str_red), "R: %d", color.red);
+
+        // Atualizando o display
+        ssd1306_fill(&ssd, false);
+        ssd1306_rect(&ssd, 0, 0, 128, 64, cor, !cor);
+        // Linha 1 - Alerta 
+        ssd1306_rect(&ssd, 0, 0, 128, 12, cor, cor); // Fundo do cabeçalho
+
+        ssd1306_draw_string(&ssd, str_red, 4, 14, false);
+        ssd1306_draw_string(&ssd, str_green, 4, 26, false);
+        ssd1306_draw_string(&ssd, str_blue, 4, 38, false);
+        ssd1306_draw_string(&ssd, str_lux, 4, 50, false);
+
+        ssd1306_line(&ssd, 68, 0, 68, 63, cor);
+
+        ssd1306_draw_string(&ssd, "COR", 87, 26, false);
+        if(color.blue>color.red && color.blue>color.green) ssd1306_draw_string(&ssd, "B", 95, 38, false);
+        else if(color.red>color.blue && color.red>color.green) ssd1306_draw_string(&ssd, "R", 95, 38, false);
+        else if(color.green>color.red && color.green>color.blue) ssd1306_draw_string(&ssd, "G", 95, 38, false);
+        else ssd1306_draw_string(&ssd, "-", 95, 38, false);
+
+        // Alertas
+        if(lux_level < alerts.lux_threshold || color.blue > alerts.color_threshold){
+            // Linha 1 - Alerta 
+            ssd1306_draw_string(&ssd, "ALERTA!", 4, 3, true);
+            pwm_set_gpio_level(BUZZER_A, wrap*0.02);
+            pwm_set_gpio_level(BUZZER_B, wrap*0.02);
+            sleep_ms(50);
+            pwm_set_gpio_level(BUZZER_A, 0);
+            pwm_set_gpio_level(BUZZER_B, 0);
+        }
+        else{
+            // Linha 1 - Alerta 
+            ssd1306_draw_string(&ssd, "NORMAL", 4, 3, true);
+            pwm_set_gpio_level(BUZZER_A, 0);
+            pwm_set_gpio_level(BUZZER_B, 0);
+        }
+
+        
+        ssd1306_send_data(&ssd);
 
         sleep_ms(50);
     }
