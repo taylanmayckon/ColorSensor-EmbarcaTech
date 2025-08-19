@@ -56,7 +56,6 @@ int led_state = 0;
 
 // Maximos observados nos sensores
 #define MAX_LUX 20
-#define MAX_COLOR 400
 
 
 // -> Funções Auxiliares =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -144,7 +143,7 @@ int main(){
 
     alerts_t alerts = {
         .lux_threshold = 5, // Limite de luminosidade (LUX)
-        .color_threshold = 5  // Limite de cor 
+        .color_threshold = 150  // Limite de cor 
     };
 
     // Iniciando os botões
@@ -183,7 +182,7 @@ int main(){
 
         // Alertas
         // (DO JEITO QUE TÁ FUNCIONA PARA COR AZUL)
-        if(lux_level < alerts.lux_threshold || gy33_data.b < alerts.color_threshold){
+        if(lux_level < alerts.lux_threshold || color.blue > alerts.color_threshold){
             pwm_set_gpio_level(BUZZER_A, wrap*0.02);
             pwm_set_gpio_level(BUZZER_B, wrap*0.02);
             sleep_ms(50);
