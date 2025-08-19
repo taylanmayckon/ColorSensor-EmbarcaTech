@@ -54,6 +54,10 @@ uint sm;
 
 int led_state = 0;
 
+// Maximos observados nos sensores
+#define MAX_LUX 20
+#define MAX_COLOR 400
+
 
 // -> Funções Auxiliares =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Função para configurar o PWM e iniciar com 0% de DC
@@ -110,6 +114,7 @@ int main(){
     ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT_DISP);
     ssd1306_config(&ssd);
     ssd1306_fill(&ssd, false);
+    ssd1306_send_data(&ssd);
 
     // Iniciando o I2C dos sensores
     i2c_init(I2C_PORT, 400 * 1000);
@@ -128,9 +133,18 @@ int main(){
     set_pwm(BUZZER_A, wrap);
     set_pwm(BUZZER_B, wrap);
 
+    // Inicializando os LEDs
+    gpio_init(LED_RED);
+    gpio_init(LED_GREEN);
+    gpio_init(LED_BLUE);
+
+    gpio_set_dir(LED_RED, GPIO_OUT);
+    gpio_set_dir(LED_GREEN, GPIO_OUT);
+    gpio_set_dir(LED_BLUE, GPIO_OUT);
+
     alerts_t alerts = {
-        .lux_threshold = 1000, // Limite de luminosidade (LUX)
-        .color_threshold = 500  // Limite de cor 
+        .lux_threshold = 5, // Limite de luminosidade (LUX)
+        .color_threshold = 5  // Limite de cor 
     };
 
     // Iniciando os botões
@@ -149,17 +163,19 @@ int main(){
 
     while (true) {
         lux_level = bh1750_read_measurement(I2C_PORT);
-        printf("Lux = %d\n", lux_level);
         gy33_read_color(&gy33_data);
-        printf("Cor detectada - R: %d, G: %d, B: %d, Clear: %d\n", gy33_data.r, gy33_data.g, gy33_data.b, gy33_data.c);
-
         // Normmalizando os valores de cor e intensidade
-        Led_color color = {
-            .red = gy33_data.r / 256,
-            .green = gy33_data.g / 256,
-            .blue = gy33_data.b / 256
-        };
-        float led_intensity = (float)gy33_data.c / 65535.0; 
+        Led_color color;
+        color.blue = (uint8_t)((gy33_data.b * 255) / gy33_data.c); 
+        color.green = (uint8_t)((gy33_data.g * 255) / gy33_data.c);
+        color.red = (uint8_t)((gy33_data.r * 255) / gy33_data.c);
+
+        float led_intensity = (float)lux_level / MAX_LUX; 
+
+        printf("Lux = %d\n", lux_level);
+        printf("Intensidade Luz = %.2f\n", led_intensity);
+        printf("Cor detectada - R: %d, G: %d, B: %d, Clear: %d\n", gy33_data.r, gy33_data.g, gy33_data.b, gy33_data.c);
+        printf("Cor MATRIZ - R: %d, G: %d, B: %d, Clear: %d\n", color.red, color.green, color.blue);
 
         // Enviando a cor para a matriz de LEDs
         fill_matrix(color, led_intensity);

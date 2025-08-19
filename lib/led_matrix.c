@@ -58,6 +58,10 @@ void matrix_update_leds(Led_frame *frame, float intensidade){
 
 // Preencher a matriz com uma cor
 void fill_matrix(Led_color color, float intensidade) {
+    if (color.red>255) color.red = 255;
+    if (color.green>255) color.green = 255;
+    if (color.blue>255) color.blue = 255;
+
     for (int i = 0; i < NUM_PIXELS; i++) {
         led_buffer.led[i].red = color.red;
         led_buffer.led[i].green = color.green;
