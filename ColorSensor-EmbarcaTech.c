@@ -144,6 +144,9 @@ int main(){
     gpio_pull_up(BUTTON_B);
     gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
+    // Inicializando o sensor de cor
+    gy33_init();
+
     while (true) {
         lux_level = bh1750_read_measurement(I2C_PORT);
         printf("Lux = %d\n", lux_level);
